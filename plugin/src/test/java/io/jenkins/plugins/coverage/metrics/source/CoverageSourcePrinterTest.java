@@ -45,6 +45,39 @@ class CoverageSourcePrinterTest extends AbstractCoverageTest {
     }
 
     @Test
+    void shouldRenderLinesWithModifiedLines() {
+        var tree = readResult("../steps/jacoco-codingstyle.xml", new JacocoParser());
+
+        var node = tree.findFile("TreeStringBuilder.java").get();
+        node.addModifiedLines(0, 113, 61, 19);
+        var file = new CoverageSourcePrinter(node);
+
+        assertThat(file.getColorClass(0)).isEqualTo(String.format("%s %s", CoverageSourcePrinter.MODIFIED, CoverageSourcePrinter.NO_COVERAGE));
+        assertThat(file.getSummaryColumn(0)).isEqualTo("0");
+        assertThat(file.getTooltip(0)).isEqualTo("Modified, not covered");
+
+        assertThat(file.getColorClass(113)).isEqualTo(String.format("%s %s", CoverageSourcePrinter.MODIFIED, CoverageSourcePrinter.PARTIAL_COVERAGE));
+        assertThat(file.getSummaryColumn(113)).isEqualTo("1/2");
+        assertThat(file.getTooltip(113)).isEqualToIgnoringWhitespace("Modified, partially covered, branch coverage: 1/2");
+
+        assertThat(file.getColorClass(61)).isEqualTo(String.format("%s %s", CoverageSourcePrinter.MODIFIED, CoverageSourcePrinter.NO_COVERAGE));
+        assertThat(file.getSummaryColumn(61)).isEqualTo("0");
+        assertThat(file.getTooltip(61)).isEqualTo("Modified, not covered");
+
+        assertThat(file.getColorClass(19)).isEqualTo(String.format("%s %s", CoverageSourcePrinter.MODIFIED, CoverageSourcePrinter.FULL_COVERAGE));
+        assertThat(file.getSummaryColumn(19)).isEqualTo("1");
+        assertThat(file.getTooltip(19)).isEqualTo("Modified, covered at least once");
+
+        var anotherNode = tree.findFile("StringContainsUtils.java").get();
+        anotherNode.addModifiedLines(43);
+        var anotherFile = new CoverageSourcePrinter(anotherNode);
+
+        assertThat(anotherFile.getColorClass(43)).isEqualTo(String.format("%s %s", CoverageSourcePrinter.MODIFIED, CoverageSourcePrinter.FULL_COVERAGE));
+        assertThat(anotherFile.getSummaryColumn(43)).isEqualTo("2/2");
+        assertThat(anotherFile.getTooltip(43)).isEqualTo("Modified, all branches covered");
+    }
+
+    @Test
     void shouldRenderNoBrnachCoverage() {
         var tree = readResult("../steps/jacoco-analysis-model.xml", new JacocoParser());
 

@@ -1,10 +1,11 @@
 package io.jenkins.plugins.coverage.metrics.source;
 
+import edu.hm.hafner.coverage.FileNode;
 import org.apache.commons.lang3.StringUtils;
 
-import edu.hm.hafner.coverage.FileNode;
-
 import java.io.Serial;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static j2html.TagCreator.*;
 
@@ -238,15 +239,22 @@ public class VectorCastSourcePrinter extends CoverageSourcePrinter {
      */
     @Override
     public String getColorClass(final int line) {
+        String coverageClass;
         if (getCovered(line) == 0 && getMcdcPairCovered(line) == 0 && getFunctionCallCovered(line) == 0) {
-            return NO_COVERAGE;
+            coverageClass = NO_COVERAGE;
         }
         else if (getMissed(line) == 0 && getMcdcPairMissed(line) == 0 && getFunctionCallMissed(line) == 0) {
-            return FULL_COVERAGE;
+            coverageClass = FULL_COVERAGE;
         }
-        else {
-            return PARTIAL_COVERAGE;
+        else if (findIndexOfLine(line) >= 0) {
+            coverageClass = PARTIAL_COVERAGE;
+        } else {
+            coverageClass = "";
         }
+
+        return Stream.of(getModifiedColorClass(line), coverageClass)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.joining(" "));
     }
 
     /**
